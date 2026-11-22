@@ -1,0 +1,208 @@
+/* ================================================================
+ * VCU 自动化测试脚本 (CANoe CAPL)
+ * ----------------------------------------------------------------
+ * 用途：仿真 BMS/MCU/TCU 节点，对真实 VCU 控制器做 HIL 闭环测试
+ * 覆盖：上下电预充握手、扭矩响应、能量回收、故障注入、通信丢失
+ *
+ * 使用方法：
+ *   1. CANoe 新建 Configuration，导入 dbc/VCU_Matrix.dbc
+ *   2. 本文件加入 Test Module（CAPL Test Module）
+ *   3. 硬件连接 Vector VN1630/1640 接 VCU 的 CAN 总线（500 kbps）
+ *   4. 点 Start，测试报告自动输出到 CANoe Test Reporter
+ *
+ * 若无硬件：把 device 换成 CANoe 自带的 Virtual Bus，
+ *          并把真实 VCU 换成 model/ 下的仿真节点即可做 SIL 测试。
+ *
+ * Author: yefu1681668
+ * Version: 1.2
+ * ================================================================ */
+
+variables
+{
+  msTimer t100ms;
+  int     g_step;
+  int     g_pass;
+  int     g_fail;
+  float   g_busVoltage;
+  float   g_battVoltage = 350.0;
+  int     g_simulationRunning;
+}
+
+/* ---------- 主测试入口 ---------- */
+void MainTest()
+{
+  g_pass = 0;
+  g_fail = 0;
+  TestModuleTitle("VCU HIL 自动化测试 v1.2");
+  TestModuleSummary("预充握手 / 扭矩 / 回收 / 故障注入 / 通信丢失");
+
+  TestCaseBEGIN("TC01 上电预充握手");
+  tc01_precharge();
+  TestCaseEND();
+
+  TestCaseBEGIN("TC02 扭矩响应与踏板 MAP");
+  tc02_torque();
+  TestCaseEND();
+
+  TestCaseBEGIN("TC03 制动能量回收");
+  tc03_regen();
+  TestCaseEND();
+
+  TestCaseBEGIN("TC04 BMS 通信丢失故障");
+  tc04_bms_comm_loss();
+  TestCaseEND();
+
+  TestCaseBEGIN("TC05 SOC 过低限扭");
+  tc05_soc_derate();
+  TestCaseEND();
+
+  write("==== 测试结果: %d PASS / %d FAIL ====", g_pass, g_fail);
+}
+
+/* ---------- 辅助：仿真 BMS 发出电池状态 ---------- */
+void simBms(float soc, float volt, int alive)
+{
+  message BMS_Status msg;
+  if (!alive) return;
+  msg.SOC         = soc;
+  msg.BattVoltage = volt;
+  msg.BattCurrent = 0;
+  msg.BMS_State   = 2;      // DISCHARGE
+  output(msg);
+}
+
+void simTcu(float accel, float brake, int gear)
+{
+  message TCU_Input msg;
+  msg.AccelPedal = accel;
+  msg.BrakePedal = brake;
+  msg.GearReq    = gear;
+  msg.KeyState   = 3;       // START / ON
+  msg.DriveMode  = 1;       // NORMAL
+  output(msg);
+}
+
+void simKey(int on)
+{
+  message TCU_Input msg;
+  msg.KeyState = on ? 3 : 0;
+  output(msg);
+}
+
+/* 等待 VCU 状态变成指定值，超时返回 0 */
+int waitState(int target, int timeoutMs)
+{
+  int i;
+  for (i = 0; i < timeoutMs / 20; i++) {
+    if (VCU_Status.VCU_State == target) return 1;
+    testWaitForTimeout(20);
+    simBms(80, 350, 1);
+  }
+  return 0;
+}
+
+/* ---------- TC01: 预充握手 ---------- */
+void tc01_precharge()
+{
+  simKey(0);
+  testWaitForTimeout(100);
+  simKey(1);
+
+  // 阶段1：母线电压未建立，VCU 应停在 PRECHARGE
+  simBms(80, 350, 1);
+  testWaitForTimeout(200);
+  if (VCU_Status.VCU_State == 1) {
+    testStepPass("VCU 进入 PRECHARGE 状态（等待母线建立）");
+  } else {
+    testStepFail("预充状态异常: 期望 1, 实际 %d", VCU_Status.VCU_State);
+  }
+
+  // 阶段2：模拟预充完成，母线达到 350V，VCU 应在 100ms 后 READY
+  g_busVoltage = 350;
+  if (waitState(2, 1000)) {
+    testStepPass("预充完成后 100ms 进入 READY");
+    g_pass++;
+  } else {
+    testStepFail("预充未在 1s 内进入 READY");
+    g_fail++;
+  }
+}
+
+/* ---------- TC02: 扭矩响应 ---------- */
+void tc02_torque()
+{
+  // READY 后给 50% 踏板，期望扭矩请求 540 Nm (NORMAL 模式)
+  simTcu(50, 0, 3);         // D 挡
+  testWaitForTimeout(100);
+  if (VCU_TorqueCmd.TorqueReq > 500 && VCU_TorqueCmd.TorqueReq < 580) {
+    testStepPass("50% 踏板 -> 扭矩请求 %.1f Nm (期望 540)", VCU_TorqueCmd.TorqueReq);
+    g_pass++;
+  } else {
+    testStepFail("扭矩请求异常: %.1f Nm", VCU_TorqueCmd.TorqueReq);
+    g_fail++;
+  }
+
+  // SPORT 模式放大 1.15 倍 -> 621 Nm
+  message TCU_Input modeMsg;
+  modeMsg.DriveMode = 2;
+  modeMsg.AccelPedal = 50;
+  modeMsg.GearReq = 3;
+  modeMsg.KeyState = 3;
+  output(modeMsg);
+  testWaitForTimeout(100);
+  if (VCU_TorqueCmd.TorqueReq > 590 && VCU_TorqueCmd.TorqueReq < 650) {
+    testStepPass("SPORT 模式扭矩 -> %.1f Nm", VCU_TorqueCmd.TorqueReq);
+    g_pass++;
+  } else {
+    testStepFail("SPORT 扭矩异常: %.1f Nm", VCU_TorqueCmd.TorqueReq);
+    g_fail++;
+  }
+}
+
+/* ---------- TC03: 能量回收 ---------- */
+void tc03_regen()
+{
+  simTcu(0, 50, 3);         // 制动 50%
+  testWaitForTimeout(100);
+  if (VCU_Status.VCU_State == 4 && VCU_TorqueCmd.TorqueReq < 0) {
+    testStepPass("制动进入 REGEN，扭矩 %.1f Nm", VCU_TorqueCmd.TorqueReq);
+    g_pass++;
+  } else {
+    testStepFail("未进入回收状态: state=%d torque=%.1f",
+                 VCU_Status.VCU_State, VCU_TorqueCmd.TorqueReq);
+    g_fail++;
+  }
+}
+
+/* ---------- TC04: BMS 通信丢失（故障注入） ---------- */
+void tc04_bms_comm_loss()
+{
+  // 停止发送 BMS_Status，模拟通信中断 600ms
+  testWaitForTimeout(700);
+  if (VCU_Fault.FaultFlag_BMSComm == 1 && VCU_Fault.FaultLevel == 3) {
+    testStepPass("BMS 通信丢失 -> STOP 故障，扭矩归零");
+    g_pass++;
+  } else {
+    testStepFail("通信故障未触发: flag=%d level=%d",
+                 VCU_Fault.FaultFlag_BMSComm, VCU_Fault.FaultLevel);
+    g_fail++;
+  }
+  // 恢复
+  simBms(80, 350, 1);
+  testWaitForTimeout(200);
+}
+
+/* ---------- TC05: SOC 过低限扭 ---------- */
+void tc05_soc_derate()
+{
+  simBms(10, 350, 1);       // SOC 10%
+  simTcu(80, 0, 3);
+  testWaitForTimeout(200);
+  if (VCU_Fault.FaultLevel == 2) {
+    testStepPass("SOC<15% 触发 LIMIT_TORQUE");
+    g_pass++;
+  } else {
+    testStepFail("SOC 低限扭未触发: level=%d", VCU_Fault.FaultLevel);
+    g_fail++;
+  }
+}

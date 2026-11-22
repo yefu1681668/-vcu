@@ -1,0 +1,33 @@
+test_10_bms_comm_loss_stop (test_vcu.TestFaultManagement.test_10_bms_comm_loss_stop)
+BMS 通信超时 500ms -> STOP 故障，扭矩归零 ... ok
+test_11_soc_low_derate (test_vcu.TestFaultManagement.test_11_soc_low_derate)
+SOC 低于 15% 触发限扭（50%） ... ok
+test_12_soc_hysteresis (test_vcu.TestFaultManagement.test_12_soc_hysteresis)
+SOC 迟滞：低于 15% 锁存，回升到 18% 仍限扭，到 21% 才解除 ... ok
+test_13_fault_recovery (test_vcu.TestFaultManagement.test_13_fault_recovery)
+通信恢复后故障可恢复到 INIT 重新预充 ... ok
+test_14_mcu_overtemp_derate (test_vcu.TestFaultManagement.test_14_mcu_overtemp_derate)
+MCU 过温触发限扭 ... ok
+test_01_precharge_handshake (test_vcu.TestPowerOnSequence.test_01_precharge_handshake)
+上电自检通过后进入预充，母线达到 95% 并保持 100ms 才 READY ... ok
+test_02_precharge_voltage_not_enough (test_vcu.TestPowerOnSequence.test_02_precharge_voltage_not_enough)
+母线电压不足 95% 时不得进入 READY ... ok
+test_03_key_off_to_shutdown (test_vcu.TestPowerOnSequence.test_03_key_off_to_shutdown)
+READY 状态下 Key OFF 应立即下电 ... ok
+test_08_brake_enters_regen (test_vcu.TestRegen.test_08_brake_enters_regen)
+踩制动进入回收状态并输出负扭矩 ... ok
+test_09_soc_high_disables_regen (test_vcu.TestRegen.test_09_soc_high_disables_regen)
+SOC >= 95% 禁止能量回收（扭矩归零） ... ok
+test_04_pedal_deadzone (test_vcu.TestTorqueControl.test_04_pedal_deadzone)
+加速踏板 10% 以下为死区，不输出扭矩 ... ok
+test_05_pedal_map_linear (test_vcu.TestTorqueControl.test_05_pedal_map_linear)
+踏板 MAP 线性插值：50% -> 45% 满扭矩 = 540 Nm ... ok
+test_06_sport_mode_scale (test_vcu.TestTorqueControl.test_06_sport_mode_scale)
+SPORT 模式扭矩放大 1.15 倍 ... ok
+test_07_p_torque_zero (test_vcu.TestTorqueControl.test_07_p_torque_zero)
+P 挡不输出驱动扭矩 ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.002s
+
+OK

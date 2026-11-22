@@ -1,0 +1,122 @@
+VERSION "VCU_Matrix v1.2 - Vehicle Control Unit CAN Matrix"
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: VCU BMS MCU TCU DIAG Vector__XXX
+
+VAL_TABLE_ VCU_State_enum 0 "INIT" 1 "PRECHARGE" 2 "READY" 3 "DRIVING" 4 "REGEN" 5 "FAULT" 6 "SHUTDOWN" ;
+VAL_TABLE_ Gear_enum 0 "P" 1 "R" 2 "N" 3 "D" ;
+VAL_TABLE_ FaultLevel_enum 0 "NO_FAULT" 1 "WARN" 2 "LIMIT_TORQUE" 3 "STOP" ;
+
+BO_ 256 VCU_Status: 8 VCU
+	SG_ VCU_State : 0|4@1+ (1,0) [0|15] "" BMS,MCU,TCU,DIAG
+	SG_ Gear : 4|4@1+ (1,0) [0|15] "" BMS,MCU,TCU,DIAG
+	SG_ Ready : 8|1@1+ (1,0) [0|1] "" BMS,MCU,TCU,DIAG
+	SG_ FaultLevel : 9|2@1+ (1,0) [0|3] "" BMS,MCU,TCU,DIAG
+	SG_ HV_Enable : 11|1@1+ (1,0) [0|1] "" BMS
+	SG_ VehicleSpeed : 16|16@1+ (0.01,0) [0|655.35] "km/h" BMS,MCU,TCU,DIAG
+	SG_ CrrcntTime : 32|32@1+ (0.001,0) [0|4294967.295] "s" DIAG
+
+BO_ 257 VCU_TorqueCmd: 8 VCU
+	SG_ TorqueReq : 0|16@1+ (0.1,-1000) [-1000|5553.5] "Nm" MCU
+	SG_ TorqueLimitMax : 16|16@1+ (0.1,0) [0|6553.5] "Nm" MCU
+	SG_ TorqueLimitMin : 32|16@1+ (0.1,-1000) [-1000|5553.5] "Nm" MCU
+	SG_ TorqueEnable : 48|1@1+ (1,0) [0|1] "" MCU
+	SG_ RegenEnable : 49|1@1+ (1,0) [0|1] "" MCU
+
+BO_ 258 VCU_Fault: 8 VCU
+	SG_ FaultCode : 0|16@1+ (1,0) [0|65535] "" DIAG
+	SG_ FaultLevel : 16|2@1+ (1,0) [0|3] "" DIAG
+	SG_ FaultFlag_BMSComm : 18|1@1+ (1,0) [0|1] "" DIAG
+	SG_ FaultFlag_MCUComm : 19|1@1+ (1,0) [0|1] "" DIAG
+	SG_ FaultFlag_Precharge : 20|1@1+ (1,0) [0|1] "" DIAG
+	SG_ FaultFlag_SOCLow : 21|1@1+ (1,0) [0|1] "" DIAG
+
+BO_ 512 BMS_Status: 8 BMS
+	SG_ SOC : 0|16@1+ (0.1,0) [0|100] "%" VCU,DIAG
+	SG_ BattVoltage : 16|16@1+ (0.1,0) [0|6553.5] "V" VCU
+	SG_ BattCurrent : 32|16@1+ (0.1,-1000) [-1000|5553.5] "A" VCU
+	SG_ BMS_State : 48|4@1+ (1,0) [0|15] "" VCU
+	SG_ ChargeEnable : 52|1@1+ (1,0) [0|1] "" VCU
+
+BO_ 513 BMS_Limit: 8 BMS
+	SG_ MaxDischargePower : 0|16@1+ (0.1,0) [0|6553.5] "kW" VCU
+	SG_ MaxRegenPower : 16|16@1+ (0.1,0) [0|6553.5] "kW" VCU
+	SG_ MaxDischargeCurrent : 32|16@1+ (0.1,0) [0|6553.5] "A" VCU
+	SG_ MaxRegenCurrent : 48|16@1+ (0.1,0) [0|6553.5] "A" VCU
+
+BO_ 768 MCU_Status: 8 MCU
+	SG_ MotorSpeed : 0|16@1+ (1,-10000) [-10000|55535] "rpm" VCU,DIAG
+	SG_ TorqueActual : 16|16@1+ (0.1,-1000) [-1000|5553.5] "Nm" VCU
+	SG_ MCU_State : 32|4@1+ (1,0) [0|15] "" VCU
+	SG_ MotorTemp : 36|12@1+ (0.1,-40) [-40|367.5] "degC" VCU
+
+BO_ 769 MCU_Fault: 8 MCU
+	SG_ MCU_FaultCode : 0|16@1+ (1,0) [0|65535] "" VCU,DIAG
+	SG_ OverTemp : 16|1@1+ (1,0) [0|1] "" VCU
+	SG_ OverCurrent : 17|1@1+ (1,0) [0|1] "" VCU
+
+BO_ 1024 TCU_Input: 8 TCU
+	SG_ AccelPedal : 0|16@1+ (0.1,0) [0|100] "%" VCU
+	SG_ BrakePedal : 16|16@1+ (0.1,0) [0|100] "%" VCU
+	SG_ GearReq : 32|4@1+ (1,0) [0|15] "" VCU
+	SG_ KeyState : 36|2@1+ (1,0) [0|3] "" VCU
+	SG_ DriveMode : 38|2@1+ (1,0) [0|3] "" VCU
+
+BA_DEF_ BO_ "GenMsgCycleTime" INT 0 10000;
+BA_DEF_ BO_ "GenMsgSendType" ENUM "Cyclic","Event","CyclicAndEvent";
+BA_DEF_ SG_ "GenSigStartValue" FLOAT 0 0;
+BA_DEF_DEF_ "GenMsgCycleTime" 0;
+BA_DEF_DEF_ "GenMsgSendType" "Cyclic";
+BA_DEF_DEF_ "GenSigStartValue" 0;
+
+BA_ "GenMsgCycleTime" BO_ 256 10;
+BA_ "GenMsgCycleTime" BO_ 257 10;
+BA_ "GenMsgCycleTime" BO_ 258 100;
+BA_ "GenMsgCycleTime" BO_ 512 100;
+BA_ "GenMsgCycleTime" BO_ 513 100;
+BA_ "GenMsgCycleTime" BO_ 768 10;
+BA_ "GenMsgCycleTime" BO_ 769 100;
+BA_ "GenMsgCycleTime" BO_ 1024 20;
+
+BA_ "GenMsgSendType" BO_ 258 "CyclicAndEvent";
+BA_ "GenMsgSendType" BO_ 769 "CyclicAndEvent";
+
+VAL_ 256 VCU_State 0 "INIT" 1 "PRECHARGE" 2 "READY" 3 "DRIVING" 4 "REGEN" 5 "FAULT" 6 "SHUTDOWN" ;
+VAL_ 256 Gear 0 "P" 1 "R" 2 "N" 3 "D" ;
+VAL_ 258 FaultLevel 0 "NO_FAULT" 1 "WARN" 2 "LIMIT_TORQUE" 3 "STOP" ;
+VAL_ 512 BMS_State 0 "INIT" 1 "STANDBY" 2 "DISCHARGE" 3 "CHARGE" 4 "FAULT" ;
+VAL_ 768 MCU_State 0 "INIT" 1 "READY" 2 "RUN" 3 "FAULT" ;
+VAL_ 1024 KeyState 0 "OFF" 1 "ACC" 2 "ON" 3 "START" ;
+VAL_ 1024 DriveMode 0 "ECO" 1 "NORMAL" 2 "SPORT" ;

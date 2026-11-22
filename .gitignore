@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# MATLAB / Simulink
+*.slx~
+*.m~
+slprj/
+*.mex*
+*.asv
+
+# CANoe
+*.cfg.bak
+*.blg
+*.asc
+*.trc
+*.mp4
+
+# OS
+.DS_Store
+Thumbs.db

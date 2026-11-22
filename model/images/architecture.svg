@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 430" width="100%" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <rect width="880" height="430" fill="#ffffff"/>
+  <text x="440" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#1a1a1a">VCU 整车控制系统架构</text>
+
+  <defs>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#5f6368"/>
+    </marker>
+  </defs>
+  <style>
+    .box { fill:#f8f9fa; stroke:#5f6368; stroke-width:1.5; }
+    .vcu { fill:#e8f0fe; stroke:#1a73e8; stroke-width:2; }
+    .core { fill:#e6f4ea; stroke:#137333; stroke-width:1.5; }
+    .can { fill:#fef7e0; stroke:#f9ab00; stroke-width:1.5; }
+    .t { font-size:12px; fill:#1a1a1a; text-anchor:middle; }
+    .ts { font-size:10.5px; fill:#5f6368; text-anchor:middle; }
+    .e { stroke:#5f6368; stroke-width:1.5; fill:none; marker-end:url(#a); }
+  </style>
+
+  <rect x="40" y="80" width="140" height="52" rx="8" class="can"/>
+  <text x="110" y="102" class="t">BMS</text>
+  <text x="110" y="120" class="ts">电池管理 0x200/0x201</text>
+
+  <rect x="40" y="170" width="140" height="52" rx="8" class="can"/>
+  <text x="110" y="192" class="t">MCU</text>
+  <text x="110" y="210" class="ts">电机控制 0x300/0x301</text>
+
+  <rect x="40" y="260" width="140" height="52" rx="8" class="can"/>
+  <text x="110" y="282" class="t">TCU</text>
+  <text x="110" y="300" class="ts">踏板/挡位 0x400</text>
+
+  <rect x="250" y="150" width="90" height="100" rx="8" class="vcu"/>
+  <text x="295" y="195" class="t">CAN 总线</text>
+  <text x="295" y="214" class="ts">500 kbps</text>
+  <text x="295" y="232" class="ts">DBC 驱动</text>
+
+  <rect x="380" y="70" width="200" height="300" rx="12" class="vcu"/>
+  <text x="480" y="95" font-size="14" font-weight="600" fill="#1a73e8" text-anchor="middle">VCU 应用层</text>
+
+  <rect x="395" y="110" width="170" height="42" rx="6" class="core"/>
+  <text x="480" y="128" class="t">Signal_Conditioning</text>
+  <text x="480" y="144" class="ts">信号调理 / 限幅 / 枚举检查</text>
+
+  <rect x="395" y="165" width="170" height="42" rx="6" class="core"/>
+  <text x="480" y="183" class="t">Fault_Management</text>
+  <text x="480" y="199" class="ts">通信超时 / SOC / 温度诊断</text>
+
+  <rect x="395" y="220" width="170" height="42" rx="6" class="core"/>
+  <text x="480" y="238" class="t">State_Machine</text>
+  <text x="480" y="254" class="ts">Stateflow 7 状态机</text>
+
+  <rect x="395" y="275" width="170" height="42" rx="6" class="core"/>
+  <text x="480" y="293" class="t">Torque_Control</text>
+  <text x="480" y="309" class="ts">查表 / 模式系数 / 故障降额</text>
+
+  <rect x="395" y="330" width="170" height="30" rx="6" class="can"/>
+  <text x="480" y="350" class="ts">10 ms 周期调度 · Embedded Coder 代码生成</text>
+
+  <rect x="640" y="120" width="200" height="52" rx="8" class="core"/>
+  <text x="740" y="142" class="t">Simulink / Stateflow</text>
+  <text x="740" y="160" class="ts">MBD 建模与代码生成</text>
+
+  <rect x="640" y="200" width="200" height="52" rx="8" class="core"/>
+  <text x="740" y="222" class="t">CANoe / CANalyzer</text>
+  <text x="740" y="240" class="ts">CAPL 自动化测试 / HIL</text>
+
+  <rect x="640" y="280" width="200" height="52" rx="8" class="core"/>
+  <text x="740" y="302" class="t">Python MIL 参考实现</text>
+  <text x="740" y="320" class="ts">14 项单元测试 / CI</text>
+
+  <path class="e" d="M180 106 L248 180"/>
+  <path class="e" d="M180 196 L248 196"/>
+  <path class="e" d="M180 286 L248 212"/>
+  <path class="e" d="M340 200 L378 200"/>
+  <path class="e" d="M580 200 L638 146"/>
+  <path class="e" d="M580 200 L638 226"/>
+  <path class="e" d="M580 200 L638 306"/>
+</svg>

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" width="100%" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <rect x="0" y="0" width="900" height="560" fill="#ffffff"/>
+  <text x="450" y="30" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">VCU 整车控制状态机（Stateflow 等价图）</text>
+  <text x="450" y="52" text-anchor="middle" font-size="12" fill="#666">10 ms 周期调度 · 预充 100 ms 消抖 · 通信超时 500 ms</text>
+
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#37474f"/>
+    </marker>
+  </defs>
+  <style>
+    .st { fill:#e8f0fe; stroke:#1a73e8; stroke-width:2; }
+    .st-init { fill:#eef5e9; stroke:#5a8f3c; stroke-width:2; }
+    .st-run { fill:#e6f4ea; stroke:#137333; stroke-width:2; }
+    .st-fault { fill:#fce8e6; stroke:#c5221f; stroke-width:2; }
+    .st-shut { fill:#f1f3f4; stroke:#5f6368; stroke-width:2; }
+    .lbl { font-size:12px; fill:#37474f; }
+    .name { font-size:13px; font-weight:600; fill:#1a1a1a; text-anchor:middle; }
+    .edge { stroke:#37474f; stroke-width:1.6; fill:none; marker-end:url(#arr); }
+  </style>
+
+  <rect x="60" y="90" width="130" height="56" rx="28" class="st-init"/>
+  <text x="125" y="113" class="name">INIT</text>
+  <text x="125" y="131" class="lbl">上电自检</text>
+
+  <rect x="260" y="90" width="140" height="56" rx="28" class="st"/>
+  <text x="330" y="113" class="name">PRECHARGE</text>
+  <text x="330" y="131" class="lbl">预充握手</text>
+
+  <rect x="470" y="90" width="110" height="56" rx="28" class="st"/>
+  <text x="525" y="113" class="name">READY</text>
+  <text x="525" y="131" class="lbl">高压就绪</text>
+
+  <rect x="660" y="90" width="120" height="56" rx="28" class="st-run"/>
+  <text x="720" y="113" class="name">DRIVING</text>
+  <text x="720" y="131" class="lbl">驱动 · 正扭矩</text>
+
+  <rect x="660" y="250" width="120" height="56" rx="28" class="st-run"/>
+  <text x="720" y="273" class="name">REGEN</text>
+  <text x="720" y="291" class="lbl">回收 · 负扭矩</text>
+
+  <rect x="330" y="410" width="140" height="56" rx="28" class="st-fault"/>
+  <text x="400" y="433" class="name">FAULT</text>
+  <text x="400" y="451" class="lbl">故障 · 扭矩归零</text>
+
+  <rect x="60" y="410" width="130" height="56" rx="28" class="st-shut"/>
+  <text x="125" y="433" class="name">SHUTDOWN</text>
+  <text x="125" y="451" class="lbl">下电</text>
+
+  <path class="edge" d="M190 118 L258 118"/>
+  <text x="224" y="110" text-anchor="middle" class="lbl">Key ON</text>
+
+  <path class="edge" d="M400 118 L468 118"/>
+  <text x="434" y="103" text-anchor="middle" class="lbl">母线≥95%</text>
+  <text x="434" y="148" text-anchor="middle" class="lbl">保持100ms</text>
+
+  <path class="edge" d="M580 118 L658 118"/>
+  <text x="619" y="103" text-anchor="middle" class="lbl">踏板&gt;10%</text>
+  <text x="619" y="148" text-anchor="middle" class="lbl">D/R挡</text>
+
+  <path class="edge" d="M700 146 L700 248"/>
+  <text x="790" y="200" class="lbl">制动&gt;5%</text>
+
+  <path class="edge" d="M680 250 C620 220 620 160 600 146"/>
+  <text x="558" y="196" class="lbl">松制动</text>
+
+  <path class="edge" d="M660 290 C520 350 480 330 470 438"/>
+  <text x="500" y="370" class="lbl">STOP 故障</text>
+
+  <path class="edge" d="M660 118 C520 118 500 400 470 430"/>
+  <text x="520" y="235" class="lbl">通信丢失</text>
+
+  <path class="edge" d="M330 438 L192 438"/>
+  <text x="260" y="430" text-anchor="middle" class="lbl">故障恢复+Key ON</text>
+
+  <path class="edge" d="M470 146 C400 200 200 200 155 408"/>
+  <text x="250" y="270" class="lbl">Key OFF</text>
+
+  <rect x="470" y="510" width="430" height="38" rx="8" fill="#f8f9fa" stroke="#dadce0"/>
+  <text x="485" y="534" font-size="11.5" fill="#5f6368">预充失败(5s超时) → FAULT · SOC&lt;15%限扭50% · SOC≥95%禁回收 · 迟滞5%防抖</text>
+</svg>
